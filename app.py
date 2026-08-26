@@ -1,68 +1,98 @@
 import streamlit as st
-import datetime
-import math
+import requests
+import pandas as pd
+from datetime import datetime
 
-st.set_page_config(page_title="Ace Trucking Load Calculator", layout="wide")
-st.title("🚛 Ace Trucking Services - Spot Market Calculator")
+# --- Configuration ---
+# Verify this base URL with Apollo ELD/Assured Techmatics support if connection fails.
+API_BASE_URL = "https://api.assuredtechmatics.com" 
+API_KEY = "F3UM4oyt!oIDDxKRRI644h31"
 
-# Sidebar: Settings & Overhead Controls
-st.sidebar.header("Equipment & Cost Settings")
-equipment = st.sidebar.selectbox("Equipment Type", ["Sleeper Tractor", "Box Truck", "Day Cab", "1998 Freightliner"])
-fuel_price = st.sidebar.number_input("Fuel Price ($/gal)", value=3.65, step=0.05)
-avg_mpg = st.sidebar.number_input("Average MPG", value=7.0, step=0.1)
-avg_speed = st.sidebar.number_input("Avg Speed (mph)", value=60, step=5)
-other_cpm = st.sidebar.number_input("Other Overhead ($/mi)", value=0.00, step=0.05)
-load_buffer = st.sidebar.number_input("Loading Buffer (hrs)", value=2.0, step=0.5)
+st.set_page_config(page_title="Live HOS Dispatch Dashboard", layout="wide")
+st.title("Live Fleet HOS & Recap Dashboard")
 
-# Driver HOS Input (Manual Entry)
-st.sidebar.subheader("Driver HOS Status")
-cycle_rem = st.sidebar.number_input("70hr Cycle Remaining (from Apollo ELD)", value=70.0, step=1.0)
-
-# Main Dashboard Layout
-col1, col2 = st.columns(2)
-with col1:
-    st.subheader("Load Input")
-    pickup_date = st.date_input("Pickup Date", datetime.date.today())
-    pickup_time = st.time_input("Pickup Time", datetime.time(16, 0))
-    loaded_miles = st.number_input("Loaded Miles", value=2100, step=50)
-    deadhead_miles = st.number_input("Deadhead Miles", value=10, step=10)
-    flat_rate = st.number_input("Load Flat Rate ($)", value=4600.0, step=100.0)
-
-# Core Logic & Calculations
-total_miles = loaded_miles + deadhead_miles
-fuel_cost = (total_miles / avg_mpg) * fuel_price if avg_mpg > 0 else 0
-other_costs = total_miles * other_cpm
-total_cost = fuel_cost + other_costs
-gross_rpm = flat_rate / total_miles if total_miles > 0 else 0
-net_profit = flat_rate - total_cost
-margin = (net_profit / flat_rate) * 100 if flat_rate > 0 else 0
-
-drive_hrs = total_miles / avg_speed if avg_speed > 0 else 0
-on_duty_needed = drive_hrs + load_buffer
-
-if on_duty_needed > cycle_rem:
-    hos_status = "Requires 34hr Restart"
-elif drive_hrs > 11:
-    hos_status = "Requires 10hr Break"
-else:
-    hos_status = "Within Available Hours"
-
-ten_hr_breaks = math.ceil((drive_hrs - 11) / 11) * 10 if drive_hrs > 11 else 0
-total_transit_hrs = drive_hrs + load_buffer + ten_hr_breaks + (34 if on_duty_needed > cycle_rem else 0)
-
-pickup_datetime = datetime.datetime.combine(pickup_date, pickup_time)
-est_completion = pickup_datetime + datetime.timedelta(hours=total_transit_hrs)
-
-with col2:
-    st.subheader("Profitability & Scheduling")
-    st.metric("Gross Rate Per Mile", f"${gross_rpm:.2f}")
+# --- Data Fetching Functions ---
+# Caching the roster for 1 hour to save API calls, as active drivers change infrequently.
+@st.cache_data(ttl=3600)
+def fetch_active_drivers():
+    url = f"{API_BASE_URL}/HOSDriver/v2.0/GetHOSDriversForClient"
+    params = {
+        "HOSClientApiKey": API_KEY,
+        "DriverStatus": 1 # 1 = Active Drivers Only
+    }
     
-    # Conditional coloring for profit margin
-    if margin >= 15:
-        st.success(f"Net Profit: ${net_profit:,.2f} ({margin:.1f}% Margin)")
-    else:
-        st.error(f"Net Profit: ${net_profit:,.2f} ({margin:.1f}% Margin)")
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching driver roster: {e}")
+        return None
+
+# Caching live HOS data for 60 seconds.
+@st.cache_data(ttl=60) 
+def fetch_hos_data():
+    url = f"{API_BASE_URL}/HOSDashboard/v2.0/GetHoursOfServiceByDriverForClient"
+    params = {
+        "HOSClientApiKey": API_KEY,
+        "HOSDriverId": -1 # -1 = All Drivers
+    }
+    
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching live HOS data: {e}")
+        return None
+
+# --- Main Application Logic ---
+st.subheader("Current Driver Duty Status")
+
+with st.spinner("Fetching data from Apollo REST API..."):
+    drivers_data = fetch_active_drivers()
+    hos_data = fetch_hos_data()
+
+if drivers_data and hos_data:
+    # Convert API responses into Pandas DataFrames for easy manipulation
+    df_drivers = pd.DataFrame(drivers_data)
+    df_hos = pd.DataFrame(hos_data)
+    
+    if not df_drivers.empty and not df_hos.empty:
+        # Map the relevant IDs to join the data (Adjust column names based on exact API JSON response)
+        # Assuming 'Id' in drivers matches 'DriverId' in HOS data based on standard patterns.
+        df_merged = pd.merge(
+            df_hos, 
+            df_drivers, 
+            left_on="DriverId", 
+            right_on="Id", 
+            how="left"
+        )
         
-    st.metric("HOS Status", hos_status)
-    st.metric("Total Transit Time", f"{total_transit_hrs:.2f} hrs")
-    st.metric("Est. Completion Date", est_completion.strftime("%Y-%m-%d %I:%M %p"))
+        # Select and rename columns to make the dashboard readable
+        # Note: You may need to tweak these exact string names depending on the raw JSON keys
+        display_columns = {
+            "DriverName": "Driver Name",
+            "CurrentDutyStatus": "Duty Status",
+            "DrivingLeft": "Driving Time Left",
+            "ShiftLeft": "Shift Time Left",
+            "CycleLeft": "Cycle Time Left (Recap)",
+            "NextBreak": "Next Break Required"
+        }
+        
+        # Filter only the columns that actually exist in the merged dataframe to avoid KeyError
+        available_cols = {k: v for k, v in display_columns.items() if k in df_merged.columns}
+        
+        df_display = df_merged[list(available_cols.keys())].rename(columns=available_cols)
+        
+        # Display as an interactive dataframe
+        st.dataframe(df_display, use_container_width=True, hide_index=True)
+        
+        # Adding a refresh button to clear the 60-second cache instantly if needed
+        if st.button("Force Live Refresh"):
+            fetch_hos_data.clear()
+            st.rerun()
+    else:
+        st.warning("Data was retrieved successfully, but no driver records were found.")
+else:
+    st.info("Check your API key or base URL configuration.")

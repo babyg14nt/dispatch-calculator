@@ -55,7 +55,7 @@ st.markdown("""
 
 # --- Header Section ---
 st.markdown("### SHIPPING UNIVERSE LLC")
-st.markdown("<p style='color: #9ca3af; margin-top: -15px;'>Unified HOS Compliance, Profitability & Strict ETA Command Center</p>", unsafe_allow_html=True)
+st.markdown("<p style='color: #9ca3af; margin-top: -15px;'>Unified HOS Compliance, Profitability & Timeline Command Center</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 # --- Section 1: Operator HOS Baseline ---
@@ -100,7 +100,7 @@ total_cost = total_fuel_cost + fixed_expenses
 net_profit = gross_pay - total_cost
 rpm = gross_pay / total_miles if total_miles > 0 else 0
 
-# Strict HOS-Based ETA & Clock Projection Engine
+# Strict HOS-Based ETA & Step-by-Step Timeline Simulation Engine
 total_trip_hours_needed = total_miles / average_speed if average_speed > 0 else 0
 current_dt = datetime.combine(pickup_date, pickup_time)
 
@@ -110,7 +110,16 @@ shift_clock = shift_hours_left
 cycle_clock = cycle_hours_left
 
 active_drive_left_in_shift = min(drive_clock, shift_clock, cycle_clock)
-breaks_taken = 0
+timeline_events = []
+
+# Log initial state
+timeline_events.append({
+    "Milestone": "Trip Pickup Started",
+    "Time": current_dt.strftime('%b %d, %H:%M'),
+    "Driving Clock": f"{drive_clock:.2f}h",
+    "Shift Clock": f"{shift_clock:.2f}h",
+    "Cycle Clock": f"{cycle_clock:.2f}h"
+})
 
 while remaining_drive_to_complete > 0:
     if active_drive_left_in_shift >= remaining_drive_to_complete:
@@ -119,6 +128,14 @@ while remaining_drive_to_complete > 0:
         drive_clock -= remaining_drive_to_complete
         shift_clock -= remaining_drive_to_complete
         cycle_clock -= remaining_drive_to_complete
+        
+        timeline_events.append({
+            "Milestone": "Final Drop-Off Reached",
+            "Time": current_dt.strftime('%b %d, %H:%M'),
+            "Driving Clock": f"{max(0.0, drive_clock):.2f}h",
+            "Shift Clock": f"{max(0.0, shift_clock):.2f}h",
+            "Cycle Clock": f"{max(0.0, cycle_clock):.2f}h"
+        })
         remaining_drive_to_complete = 0
     else:
         # Drive until limit reached
@@ -129,13 +146,29 @@ while remaining_drive_to_complete > 0:
         shift_clock -= active_drive_left_in_shift
         cycle_clock -= active_drive_left_in_shift
         
+        timeline_events.append({
+            "Milestone": "HOS Limit Reached (Driving/Shift Max)",
+            "Time": current_dt.strftime('%b %d, %H:%M'),
+            "Driving Clock": "0.00h (Exhausted)",
+            "Shift Clock": "0.00h (Exhausted)",
+            "Cycle Clock": f"{max(0.0, cycle_clock):.2f}h"
+        })
+        
         # Take mandatory 10-hour reset break
         current_dt += timedelta(hours=10)
-        breaks_taken += 1
         
         # Fresh shift reset values
         drive_clock = 11.0
         shift_clock = 14.0
+        
+        timeline_events.append({
+            "Milestone": "10-Hour Rest Break Completed",
+            "Time": current_dt.strftime('%b %d, %H:%M'),
+            "Driving Clock": f"{drive_clock:.2f}h (Reset)",
+            "Shift Clock": f"{shift_clock:.2f}h (Reset)",
+            "Cycle Clock": f"{max(0.0, cycle_clock):.2f}h"
+        })
+        
         active_drive_left_in_shift = min(drive_clock, shift_clock, cycle_clock)
 
 estimated_dropoff_dt = current_dt
@@ -151,7 +184,7 @@ else:
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("#### 📊 Command Center Output & Drop-Off Projections")
 
-# Top Metrics Row (Financials & ETA)
+# Top Metrics Row
 r1, r2, r3, r4 = st.columns(4)
 with r1:
     st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>NET PROFIT</p><h2 style='color: {prof_color};'>${net_profit:,.2f}</h2></div>", unsafe_allow_html=True)
@@ -160,19 +193,15 @@ with r2:
 with r3:
     st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>HOS DROP-OFF ETA</p><h4 style='color: #38bdf8; margin-top: 10px;'>{estimated_dropoff_dt.strftime('%b %d, %Y - %H:%M')}</h4></div>", unsafe_allow_html=True)
 with r4:
-    st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>MANDATORY BREAKS</p><h2 style='color: #f59e0b;'>{breaks_taken} Breaks</h2></div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>LOAD RATING</p><h4 style='color: {prof_color}; margin-top: 10px;'>{prof_rating}</h4></div>", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
-st.markdown("#### 🕒 Driver Clock Status Upon Drop-Off")
+st.markdown("#### 🕒 Step-by-Step Trip Clock Timeline (HOS Evolution)")
+st.markdown("<p style='color: #9ca3af; font-size: 14px; margin-top: -15px;'>This table tracks how the driver's clock changes dynamically at every stage of transit, including mandatory rest breaks.</p>", unsafe_allow_html=True)
 
-# Driver Clock Status Row
-clock1, clock2, clock3 = st.columns(3)
-with clock1:
-    st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>DRIVING CLOCK LEFT</p><h3 style='color: #38bdf8;'>{max(0.0, drive_clock):.2f} hrs / 11h</h3></div>", unsafe_allow_html=True)
-with clock2:
-    st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>SHIFT WINDOW LEFT</p><h3 style='color: #38bdf8;'>{max(0.0, shift_clock):.2f} hrs / 14h</h3></div>", unsafe_allow_html=True)
-with clock3:
-    st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>70-HOUR CYCLE LEFT</p><h3 style='color: #38bdf8;'>{max(0.0, cycle_clock):.2f} hrs / 70h</h3></div>", unsafe_allow_html=True)
+# Render the timeline dataframe cleanly
+df_timeline = pd.DataFrame(timeline_events)
+st.dataframe(df_timeline, use_container_width=True, hide_index=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 if st.button("Commit Load Profile to Dispatch Log"):
@@ -184,8 +213,7 @@ if st.button("Commit Load Profile to Dispatch Log"):
         "Total Miles": total_miles,
         "RPM": f"${rpm:.2f}",
         "Net Profit": f"${net_profit:,.2f}",
-        "HOS Drop-Off": estimated_dropoff_dt.strftime('%Y-%m-%d %H:%M'),
-        "Clock Drive Left": f"{max(0.0, drive_clock):.2f}h"
+        "HOS Drop-Off": estimated_dropoff_dt.strftime('%Y-%m-%d %H:%M')
     }])
     st.success("Load profile successfully processed and logged.")
     st.dataframe(log_data, use_container_width=True, hide_index=True)

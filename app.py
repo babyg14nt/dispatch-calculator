@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime
 
 # --- Configuration ---
-API_BASE_URL = "https://cloud.apolloeld.com" # Try this first
+API_BASE_URL = "https://livetrack.atcompass.net:9103" # Try this first
 API_KEY = "F3UM4oyt!oIDDxKRRI644h31"
 
 st.set_page_config(page_title="Live HOS Dispatch Dashboard", layout="wide")

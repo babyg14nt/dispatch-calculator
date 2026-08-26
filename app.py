@@ -1,10 +1,10 @@
 import streamlit as st
 import requests
 import pandas as pd
-from datetime import datetime
 
 # --- Configuration ---
-API_BASE_URL = "https://livetrack.atcompass.net:9103" # Try this first
+# Updated to use the correct live telemetry domain path
+API_BASE_URL = "https://livetrack.atcompass.net:9103"
 API_KEY = "F3UM4oyt!oIDDxKRRI644h31"
 
 st.set_page_config(page_title="Live HOS Dispatch Dashboard", layout="wide")

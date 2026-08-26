@@ -5,7 +5,7 @@ from datetime import datetime
 
 # --- Configuration ---
 # Verify this base URL with Apollo ELD/Assured Techmatics support if connection fails.
-API_BASE_URL = "https://api.assuredtechmatics.com" 
+API_BASE_URL = "https://livetrack.atcompass.net:9103" 
 API_KEY = "F3UM4oyt!oIDDxKRRI644h31"
 
 st.set_page_config(page_title="Live HOS Dispatch Dashboard", layout="wide")

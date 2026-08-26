@@ -55,148 +55,137 @@ st.markdown("""
 
 # --- Header Section ---
 st.markdown("### SHIPPING UNIVERSE LLC")
-st.markdown("<p style='color: #9ca3af; margin-top: -15px;'>HOS Compliance, Profitability & HOS-Strict ETA Command Center</p>", unsafe_allow_html=True)
+st.markdown("<p style='color: #9ca3af; margin-top: -15px;'>Unified HOS Compliance, Profitability & Strict ETA Command Center</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# --- Tab Layout for Clean Organization ---
-tab1, tab2 = st.tabs(["⚡ HOS & Compliance HUD", "💰 Load Profitability & HOS ETA Analyzer"])
+# --- Section 1: Operator HOS Baseline ---
+st.markdown("#### ⚡ 1. Active Operator HOS Baseline")
+c1, c2, c3, c4 = st.columns(4)
+with c1:
+    driver_name = st.text_input("Driver Name", "Unit-01 Operator")
+with c2:
+    driving_hours_left = st.number_input("Driving Hours Left (11h max)", min_value=0.0, max_value=11.0, value=8.5, step=0.25)
+with c3:
+    shift_hours_left = st.number_input("Shift Window Left (14h max)", min_value=0.0, max_value=14.0, value=11.0, step=0.25)
+with c4:
+    cycle_hours_left = st.number_input("70-Hour Cycle Available", min_value=0.0, max_value=70.0, value=45.25, step=0.25)
 
-with tab1:
-    st.markdown("#### Real-Time Driver Parameters")
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        driver_name = st.text_input("Driver Name", "Unit-01 Operator", key="t1_name")
-    with c2:
-        driving_hours_left = st.number_input("Driving Hours Left (11h max)", min_value=0.0, max_value=11.0, value=8.5, step=0.25, key="t1_drive")
-    with c3:
-        shift_hours_left = st.number_input("Shift Window Left (14h max)", min_value=0.0, max_value=14.0, value=11.0, step=0.25, key="t1_shift")
-    with c4:
-        cycle_hours_left = st.number_input("70-Hour Cycle Available", min_value=0.0, max_value=70.0, value=45.25, step=0.25, key="t1_cycle")
+st.markdown("---")
 
-    max_legal_drive = min(driving_hours_left, shift_hours_left, cycle_hours_left)
+# --- Section 2: Load Financials & Route Parameters ---
+st.markdown("#### 💰 2. Spot Market Financials & Route Parameters")
+p1, p2, p3 = st.columns(3)
+with p1:
+    gross_pay = st.number_input("Gross Load Pay ($)", min_value=0.0, value=2400.0, step=50.0)
+    loaded_miles = st.number_input("Loaded Miles", min_value=0.0, value=1200.0, step=10.0)
+with p2:
+    deadhead_miles = st.number_input("Deadhead Miles", min_value=0.0, value=100.0, step=10.0)
+    fuel_cost_per_gallon = st.number_input("Diesel Price ($/gal)", min_value=0.0, value=3.85, step=0.05)
+with p3:
+    truck_mpg = st.number_input("Fleet MPG", min_value=1.0, value=6.5, step=0.1)
+    average_speed = st.number_input("Estimated Avg Speed (MPH)", min_value=10.0, value=55.0, step=1.0)
 
-    if max_legal_drive > 4.0:
-        status_color, status_text = "#10b981", "OPTIMAL STATUS"
-    elif max_legal_drive > 1.5:
-        status_color, status_text = "#f59e0b", "RESTRICTED WINDOW"
+t1, t2 = st.columns(2)
+with t1:
+    pickup_date = st.date_input("Scheduled Pickup Date", datetime.now())
+    pickup_time = st.time_input("Scheduled Pickup Time", time(8, 0))
+with t2:
+    fixed_expenses = st.number_input("Other Expenses (Tolls, Lumper, etc. $)", min_value=0.0, value=150.0, step=10.0)
+
+# --- Calculations ---
+total_miles = loaded_miles + deadhead_miles
+total_gallons = total_miles / truck_mpg if truck_mpg > 0 else 0
+total_fuel_cost = total_gallons * fuel_cost_per_gallon
+total_cost = total_fuel_cost + fixed_expenses
+net_profit = gross_pay - total_cost
+rpm = gross_pay / total_miles if total_miles > 0 else 0
+
+# Strict HOS-Based ETA & Clock Projection Engine
+total_trip_hours_needed = total_miles / average_speed if average_speed > 0 else 0
+current_dt = datetime.combine(pickup_date, pickup_time)
+
+remaining_drive_to_complete = total_trip_hours_needed
+drive_clock = driving_hours_left
+shift_clock = shift_hours_left
+cycle_clock = cycle_hours_left
+
+active_drive_left_in_shift = min(drive_clock, shift_clock, cycle_clock)
+breaks_taken = 0
+
+while remaining_drive_to_complete > 0:
+    if active_drive_left_in_shift >= remaining_drive_to_complete:
+        # Finishes trip on current shift
+        current_dt += timedelta(hours=remaining_drive_to_complete)
+        drive_clock -= remaining_drive_to_complete
+        shift_clock -= remaining_drive_to_complete
+        cycle_clock -= remaining_drive_to_complete
+        remaining_drive_to_complete = 0
     else:
-        status_color, status_text = "#ef4444", "CRITICAL BREAK REQUIRED"
+        # Drive until limit reached
+        current_dt += timedelta(hours=active_drive_left_in_shift)
+        remaining_drive_to_complete -= active_drive_left_in_shift
+        
+        drive_clock -= active_drive_left_in_shift
+        shift_clock -= active_drive_left_in_shift
+        cycle_clock -= active_drive_left_in_shift
+        
+        # Take mandatory 10-hour reset break
+        current_dt += timedelta(hours=10)
+        breaks_taken += 1
+        
+        # Fresh shift reset values
+        drive_clock = 11.0
+        shift_clock = 14.0
+        active_drive_left_in_shift = min(drive_clock, shift_clock, cycle_clock)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("#### Operational HUD")
-    h1, h2, h3, h4 = st.columns(4)
-    with h1:
-        st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>MAX LEGAL RUNWAY</p><h2 style='color: {status_color};'>{max_legal_drive:.2f} hrs</h2></div>", unsafe_allow_html=True)
-    with h2:
-        st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>SYSTEM STATUS</p><h4 style='color: {status_color};'>{status_text}</h4></div>", unsafe_allow_html=True)
-    with h3:
-        st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>CYCLE CAPACITY</p><h2 style='color: #38bdf8;'>{cycle_hours_left:.2f} hrs</h2></div>", unsafe_allow_html=True)
-    with h4:
-        st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>ACTIVE OPERATOR</p><h4 style='color: #f3f4f6;'>{driver_name}</h4></div>", unsafe_allow_html=True)
+estimated_dropoff_dt = current_dt
 
-with tab2:
-    st.markdown("#### Spot Market Financials & Route Parameters")
-    p1, p2, p3 = st.columns(3)
-    with p1:
-        gross_pay = st.number_input("Gross Load Pay ($)", min_value=0.0, value=2400.0, step=50.0)
-        loaded_miles = st.number_input("Loaded Miles", min_value=0.0, value=1200.0, step=10.0)
-    with p2:
-        deadhead_miles = st.number_input("Deadhead Miles", min_value=0.0, value=100.0, step=10.0)
-        fuel_cost_per_gallon = st.number_input("Diesel Price ($/gal)", min_value=0.0, value=3.85, step=0.05)
-    with p3:
-        truck_mpg = st.number_input("Fleet MPG", min_value=1.0, value=6.5, step=0.1)
-        average_speed = st.number_input("Estimated Avg Speed (MPH)", min_value=10.0, value=55.0, step=1.0)
+# Profitability Color Codes
+if rpm >= 2.20:
+    prof_color, prof_rating = "#10b981", "HIGHLY PROFITABLE"
+elif rpm >= 1.75:
+    prof_color, prof_rating = "#38bdf8", "STANDARD MARGIN"
+else:
+    prof_color, prof_rating = "#ef4444", "LOW MARGIN / SUB-OPTIMAL"
 
-    st.markdown("---")
-    st.markdown("#### Driver HOS Baseline for Dispatch ETA")
-    
-    # Mirroring current driver constraints into the ETA engine
-    e1, e2, e3 = st.columns(3)
-    with e1:
-        current_drive_left = st.number_input("Current Drive Hours Left", min_value=0.0, max_value=11.0, value=float(driving_hours_left), step=0.25)
-    with e2:
-        current_shift_left = st.number_input("Current Shift Window Left", min_value=0.0, max_value=14.0, value=float(shift_hours_left), step=0.25)
-    with e3:
-        current_cycle_left = st.number_input("Current Cycle Hours Left", min_value=0.0, max_value=70.0, value=float(cycle_hours_left), step=0.25)
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("#### 📊 Command Center Output & Drop-Off Projections")
 
-    st.markdown("---")
-    st.markdown("#### Dispatch Timing & Expenses")
-    t1, t2 = st.columns(2)
-    with t1:
-        pickup_date = st.date_input("Scheduled Pickup Date", datetime.now())
-        pickup_time = st.time_input("Scheduled Pickup Time", time(8, 0))
-    with t2:
-        fixed_expenses = st.number_input("Other Expenses (Tolls, Lumper, etc. $)", min_value=0.0, value=150.0, step=10.0)
+# Top Metrics Row (Financials & ETA)
+r1, r2, r3, r4 = st.columns(4)
+with r1:
+    st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>NET PROFIT</p><h2 style='color: {prof_color};'>${net_profit:,.2f}</h2></div>", unsafe_allow_html=True)
+with r2:
+    st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>RATE PER MILE (RPM)</p><h2 style='color: {prof_color};'>${rpm:.2f}</h2></div>", unsafe_allow_html=True)
+with r3:
+    st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>HOS DROP-OFF ETA</p><h4 style='color: #38bdf8; margin-top: 10px;'>{estimated_dropoff_dt.strftime('%b %d, %Y - %H:%M')}</h4></div>", unsafe_allow_html=True)
+with r4:
+    st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>MANDATORY BREAKS</p><h2 style='color: #f59e0b;'>{breaks_taken} Breaks</h2></div>", unsafe_allow_html=True)
 
-    # --- Financial Calculations ---
-    total_miles = loaded_miles + deadhead_miles
-    total_gallons = total_miles / truck_mpg if truck_mpg > 0 else 0
-    total_fuel_cost = total_gallons * fuel_cost_per_gallon
-    total_cost = total_fuel_cost + fixed_expenses
-    net_profit = gross_pay - total_cost
-    rpm = gross_pay / total_miles if total_miles > 0 else 0
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("#### 🕒 Driver Clock Status Upon Drop-Off")
 
-    # --- Strict HOS-Based ETA Engine ---
-    total_trip_hours_needed = total_miles / average_speed if average_speed > 0 else 0
-    current_dt = datetime.combine(pickup_date, pickup_time)
-    
-    # Tracking operational clocks
-    remaining_drive_to_complete = total_trip_hours_needed
-    active_drive_left_in_shift = min(current_drive_left, current_shift_left, current_cycle_left)
-    
-    # Simulation loop accounting for mandatory 10-hour breaks
-    while remaining_drive_to_complete > 0:
-        if active_drive_left_in_shift >= remaining_drive_to_complete:
-            # Can finish the trip within current legal limits without breaking
-            current_dt += timedelta(hours=remaining_drive_to_complete)
-            remaining_drive_to_complete = 0
-        else:
-            # Drive as much as legally possible until hitting the HOS ceiling
-            current_dt += timedelta(hours=active_drive_left_in_shift)
-            remaining_drive_to_complete -= active_drive_left_in_shift
-            
-            # Mandatory 10-hour sleeper berth/off-duty rest break required by FMCSA regulations
-            current_dt += timedelta(hours=10)
-            
-            # Reset legal limits for the next fresh shift (11 hours max driving / 14 hour shift)
-            active_drive_left_in_shift = 11.0
+# Driver Clock Status Row
+clock1, clock2, clock3 = st.columns(3)
+with clock1:
+    st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>DRIVING CLOCK LEFT</p><h3 style='color: #38bdf8;'>{max(0.0, drive_clock):.2f} hrs / 11h</h3></div>", unsafe_allow_html=True)
+with clock2:
+    st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>SHIFT WINDOW LEFT</p><h3 style='color: #38bdf8;'>{max(0.0, shift_clock):.2f} hrs / 14h</h3></div>", unsafe_allow_html=True)
+with clock3:
+    st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>70-HOUR CYCLE LEFT</p><h3 style='color: #38bdf8;'>{max(0.0, cycle_clock):.2f} hrs / 70h</h3></div>", unsafe_allow_html=True)
 
-    estimated_dropoff_dt = current_dt
-
-    # Profitability Color Codes
-    if rpm >= 2.20:
-        prof_color = "#10b981"
-        prof_rating = "HIGHLY PROFITABLE"
-    elif rpm >= 1.75:
-        prof_color = "#38bdf8"
-        prof_rating = "STANDARD MARGIN"
-    else:
-        prof_color = "#ef4444"
-        prof_rating = "LOW MARGIN / SUB-OPTIMAL"
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("#### 📊 Profitability & HOS-Strict ETA Dashboard")
-    
-    r1, r2, r3, r4 = st.columns(4)
-    with r1:
-        st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>NET PROFIT</p><h2 style='color: {prof_color};'>${net_profit:,.2f}</h2></div>", unsafe_allow_html=True)
-    with r2:
-        st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>RATE PER MILE (RPM)</p><h2 style='color: {prof_color};'>${rpm:.2f}</h2></div>", unsafe_allow_html=True)
-    with r3:
-        st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>HOS-STRICT DROP-OFF ETA</p><h4 style='color: #38bdf8; margin-top: 10px;'>{estimated_dropoff_dt.strftime('%b %d, %Y - %H:%M')}</h4></div>", unsafe_allow_html=True)
-    with r4:
-        st.markdown(f"<div class='metric-card'><p style='color: #9ca3af; font-size: 14px;'>LOAD RATING</p><h4 style='color: {prof_color}; margin-top: 10px;'>{prof_rating}</h4></div>", unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("Commit Load Profile to Dispatch Log"):
-        log_data = pd.DataFrame([{
-            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "Company": "Shipping Universe LLC",
-            "Gross Pay": f"${gross_pay:,.2f}",
-            "Total Miles": total_miles,
-            "RPM": f"${rpm:.2f}",
-            "Net Profit": f"${net_profit:,.2f}",
-            "HOS-Strict Drop-Off": estimated_dropoff_dt.strftime('%Y-%m-%d %H:%M')
-        }])
-        st.success("Load profile successfully processed and logged.")
-        st.dataframe(log_data, use_container_width=True, hide_index=True)
+st.markdown("<br>", unsafe_allow_html=True)
+if st.button("Commit Load Profile to Dispatch Log"):
+    log_data = pd.DataFrame([{
+        "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "Company": "Shipping Universe LLC",
+        "Operator": driver_name,
+        "Gross Pay": f"${gross_pay:,.2f}",
+        "Total Miles": total_miles,
+        "RPM": f"${rpm:.2f}",
+        "Net Profit": f"${net_profit:,.2f}",
+        "HOS Drop-Off": estimated_dropoff_dt.strftime('%Y-%m-%d %H:%M'),
+        "Clock Drive Left": f"{max(0.0, drive_clock):.2f}h"
+    }])
+    st.success("Load profile successfully processed and logged.")
+    st.dataframe(log_data, use_container_width=True, hide_index=True)

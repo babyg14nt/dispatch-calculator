@@ -4,108 +4,105 @@ from datetime import datetime, timedelta, time
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="Shipping Universe LLC | Command Deck",
+    page_title="Shipping Universe LLC | Corporate Command Center",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- High-End Sci-Fi / Futuristic Styling ---
+# --- Clean Corporate Navy Blue & White Theme ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+    /* Global App Styling */
     .stApp {
-        background: radial-gradient(circle at 50% 10%, #0d1527 0%, #060911 100%);
-        color: #f3f4f6;
+        background-color: #F8FAFC;
+        color: #1E293B;
         font-family: 'Inter', sans-serif;
     }
     
-    /* Futuristic Headers */
+    /* Typography */
     h1, h2, h3, h4 {
-        font-family: 'Orbitron', sans-serif !important;
-        letter-spacing: 1px;
+        font-family: 'Inter', sans-serif !important;
+        color: #0F172A;
+        font-weight: 700;
     }
     
     .main-title {
-        background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 800;
+        color: #0B192C;
         font-size: 2.2rem;
+        font-weight: 700;
+        border-bottom: 2px solid #E2E8F0;
+        padding-bottom: 12px;
     }
     
-    /* Glassmorphism Panels */
-    .glass-container {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(56, 189, 248, 0.15);
+    /* Clean White Cards with Navy Accents */
+    .corporate-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-top: 4px solid #0B192C;
         padding: 24px;
-        border-radius: 16px;
-        box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(12px);
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         margin-bottom: 20px;
     }
     
     .metric-card {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);
-        border: 1px solid rgba(56, 189, 248, 0.25);
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid #3B82F6;
         padding: 20px;
-        border-radius: 14px;
-        box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.1), 0 4px 20px rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(8px);
-        transition: transform 0.2s ease, border-color 0.2s ease;
-    }
-    .metric-card:hover {
-        transform: translateY(-2px);
-        border-color: rgba(56, 189, 248, 0.6);
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
     
-    /* Input Styling */
+    /* Form Inputs High Contrast Readability */
     .stNumberInput input, .stTimeInput input, .stTextInput input, .stDateInput input {
-        background-color: #0b1329 !important;
-        color: #38bdf8 !important;
-        font-family: 'Orbitron', sans-serif !important;
-        border: 1px solid #1e293b !important;
-        border-radius: 10px !important;
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
+        font-family: 'Inter', sans-serif !important;
+        border: 1px solid #CBD5E1 !important;
+        border-radius: 6px !important;
         padding: 10px !important;
+        font-weight: 500;
     }
     
-    /* Glowing Action Buttons */
+    label {
+        color: #334155 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Corporate Action Button */
     .stButton button {
-        background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
-        color: white;
-        font-family: 'Orbitron', sans-serif;
-        letter-spacing: 0.5px;
+        background-color: #0B192C;
+        color: #FFFFFF;
+        font-family: 'Inter', sans-serif;
         border: none;
-        border-radius: 10px;
+        border-radius: 6px;
         font-weight: 600;
         padding: 0.7rem 1.5rem;
-        box-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
-        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(11, 25, 44, 0.2);
+        transition: background-color 0.2s ease;
         width: 100%;
     }
     .stButton button:hover {
-        box-shadow: 0 0 30px rgba(99, 102, 241, 0.8);
-        transform: translateY(-2px);
-    }
-    
-    /* Table Enhancements */
-    dataframe {
-        border-radius: 10px;
+        background-color: #1E3E62;
+        color: #FFFFFF;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # --- Header Section ---
 st.markdown("<h1 class='main-title'>SHIPPING UNIVERSE LLC</h1>", unsafe_allow_html=True)
-st.markdown("<p style='color: #94a3b8; font-family: 'Orbitron'; font-size: 0.9rem; letter-spacing: 2px; margin-top: -15px;'>// QUANTUM FLEET COMMAND & HOS-STRICT LOGISTICS ENGINE</p>", unsafe_allow_html=True)
+st.markdown("<p style='color: #64748B; font-family: Inter; font-size: 1rem; font-weight: 500; margin-top: 8px;'>Corporate Fleet Logistics, HOS Compliance & Financial Intelligence Center</p>", unsafe_allow_html=True)
 st.markdown("<br>", unsafe_allow_html=True)
 
 # --- Layout Grid: Inputs ---
 col_left, col_right = st.columns([1, 1], gap="large")
 
 with col_left:
-    st.markdown("<div class='glass-container'>", unsafe_allow_html=True)
-    st.markdown("### ⚡ Active Operator Baseline")
+    st.markdown("<div class='corporate-card'>", unsafe_allow_html=True)
+    st.markdown("### Active Operator Baseline")
     driver_name = st.text_input("Operator Designation", "Unit-01 Operator")
     
     ic1, ic2, ic3 = st.columns(3)
@@ -118,8 +115,8 @@ with col_left:
     st.markdown("</div>", unsafe_allow_html=True)
 
 with col_right:
-    st.markdown("<div class='glass-container'>", unsafe_allow_html=True)
-    st.markdown("### 💰 Spot Market Parameters")
+    st.markdown("<div class='corporate-card'>", unsafe_allow_html=True)
+    st.markdown("### Spot Market Parameters")
     
     rc1, rc2 = st.columns(2)
     with rc1:
@@ -131,8 +128,8 @@ with col_right:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # Secondary Row for Operational Config
-st.markdown("<div class='glass-container'>", unsafe_allow_html=True)
-st.markdown("### 🧭 Route Dynamics & Timing")
+st.markdown("<div class='corporate-card'>", unsafe_allow_html=True)
+st.markdown("### Route Dynamics & Timing")
 tc1, tc2, tc3, tc4 = st.columns(4)
 with tc1:
     truck_mpg = st.number_input("Fleet MPG", min_value=1.0, value=6.5, step=0.1)
@@ -167,7 +164,7 @@ active_drive_left_in_shift = min(drive_clock, shift_clock, cycle_clock)
 timeline_events = []
 
 timeline_events.append({
-    "Milestone": "🚀 Trip Pickup Initiated",
+    "Milestone": "Trip Pickup Initiated",
     "Timestamp": current_dt.strftime('%b %d, %H:%M'),
     "Drive Clock": f"{drive_clock:.2f}h",
     "Shift Clock": f"{shift_clock:.2f}h",
@@ -182,7 +179,7 @@ while remaining_drive_to_complete > 0:
         cycle_clock -= remaining_drive_to_complete
         
         timeline_events.append({
-            "Milestone": "🏁 Final Drop-Off Reached",
+            "Milestone": "Final Drop-Off Reached",
             "Timestamp": current_dt.strftime('%b %d, %H:%M'),
             "Drive Clock": f"{max(0.0, drive_clock):.2f}h",
             "Shift Clock": f"{max(0.0, shift_clock):.2f}h",
@@ -198,7 +195,7 @@ while remaining_drive_to_complete > 0:
         cycle_clock -= active_drive_left_in_shift
         
         timeline_events.append({
-            "Milestone": "⚠️ HOS Ceiling Reached (Rest Required)",
+            "Milestone": "HOS Ceiling Reached (Rest Required)",
             "Timestamp": current_dt.strftime('%b %d, %H:%M'),
             "Drive Clock": "0.00h",
             "Shift Clock": "0.00h",
@@ -211,7 +208,7 @@ while remaining_drive_to_complete > 0:
         shift_clock = 14.0
         
         timeline_events.append({
-            "Milestone": "💤 10-Hour Rest Break Completed",
+            "Milestone": "10-Hour Rest Break Completed",
             "Timestamp": current_dt.strftime('%b %d, %H:%M'),
             "Drive Clock": f"{drive_clock:.2f}h (Fresh)",
             "Shift Clock": f"{shift_clock:.2f}h (Fresh)",
@@ -222,55 +219,55 @@ while remaining_drive_to_complete > 0:
 
 estimated_dropoff_dt = current_dt
 
-# Dynamic Colors
+# Dynamic Colors for Clean Corporate Theme
 if rpm >= 2.20:
-    prof_color, prof_rating = "#10b981", "HIGH YIELD"
+    prof_color, prof_rating = "#059669", "HIGH YIELD"
 elif rpm >= 1.75:
-    prof_color, prof_rating = "#38bdf8", "STANDARD MARGIN"
+    prof_color, prof_rating = "#2563EB", "STANDARD MARGIN"
 else:
-    prof_color, prof_rating = "#ef4444", "SUB-OPTIMAL"
+    prof_color, prof_rating = "#DC2626", "SUB-OPTIMAL"
 
 st.markdown("<br>", unsafe_allow_html=True)
-st.markdown("### 📊 Telemetry & Financial Matrix")
+st.markdown("### Financial & Operational Matrix")
 
 # Top Metrics HUD
 r1, r2, r3, r4 = st.columns(4)
 with r1:
     st.markdown(f"""
         <div class='metric-card'>
-            <span style='color: #64748b; font-size: 11px; font-family: Orbitron;'>NET REVENUE</span>
-            <h2 style='color: {prof_color}; margin: 5px 0 0 0; font-family: Orbitron;'>${net_profit:,.2f}</h2>
+            <span style='color: #64748B; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;'>NET REVENUE</span>
+            <h2 style='color: {prof_color}; margin: 5px 0 0 0;'>${net_profit:,.2f}</h2>
         </div>
     """, unsafe_allow_html=True)
 with r2:
     st.markdown(f"""
         <div class='metric-card'>
-            <span style='color: #64748b; font-size: 11px; font-family: Orbitron;'>RATE PER MILE</span>
-            <h2 style='color: {prof_color}; margin: 5px 0 0 0; font-family: Orbitron;'>${rpm:.2f}</h2>
+            <span style='color: #64748B; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;'>RATE PER MILE</span>
+            <h2 style='color: {prof_color}; margin: 5px 0 0 0;'>${rpm:.2f}</h2>
         </div>
     """, unsafe_allow_html=True)
 with r3:
     st.markdown(f"""
         <div class='metric-card'>
-            <span style='color: #64748b; font-size: 11px; font-family: Orbitron;'>HOS DROP-OFF ETA</span>
-            <h4 style='color: #38bdf8; margin: 5px 0 0 0; font-family: Orbitron;'>{estimated_dropoff_dt.strftime('%b %d - %H:%M')}</h4>
+            <span style='color: #64748B; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;'>HOS DROP-OFF ETA</span>
+            <h4 style='color: #0F172A; margin: 5px 0 0 0;'>{estimated_dropoff_dt.strftime('%b %d - %H:%M')}</h4>
         </div>
     """, unsafe_allow_html=True)
 with r4:
     st.markdown(f"""
         <div class='metric-card'>
-            <span style='color: #64748b; font-size: 11px; font-family: Orbitron;'>LOAD STATUS</span>
-            <h4 style='color: {prof_color}; margin: 5px 0 0 0; font-family: Orbitron;'>{prof_rating}</h4>
+            <span style='color: #64748B; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;'>LOAD STATUS</span>
+            <h4 style='color: {prof_color}; margin: 5px 0 0 0;'>{prof_rating}</h4>
         </div>
     """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
-st.markdown("### 🕒 Operator Clock Evolution & Route Timeline")
+st.markdown("### Operator Clock Evolution & Route Timeline")
 
 # Timeline Table
 df_timeline = pd.DataFrame(timeline_events)
 st.dataframe(df_timeline, use_container_width=True, hide_index=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
-if st.button("INITIATE DISPATCH LOG COMMIT"):
-    st.success("Telemetry profile successfully secured into Shipping Universe LLC operational records.")
+if st.button("COMMIT LOAD PROFILE TO DISPATCH LOG"):
+    st.success("Load profile successfully processed and logged to corporate records.")

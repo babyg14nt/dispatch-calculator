@@ -108,9 +108,9 @@ with left_column:
     with ic1:
         driving_hours_left = st.number_input("Drive Left (11h)", min_value=0.0, max_value=11.0, value=8.5, step=0.25)
     with ic2:
-        shift_hours_left = st.number_input("Shift Left (14h)", min_value=0.0, max_value=14.0, value=11.0, step=0.25)
+        shift_hours_left = st.number_input("Shift Left (14h)", min_value=0.0, max_value=14.0, value=14.0, step=0.25)
     with ic3:
-        cycle_hours_left = st.number_input("Cycle Left", min_value=0.0, max_value=70.0, value=45.25, step=0.25)
+        cycle_hours_left = st.number_input("Cycle Left", min_value=0.0, max_value=70.0, value=70.0, step=0.25)
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<div class='corporate-card'>", unsafe_allow_html=True)
@@ -148,7 +148,7 @@ with right_column:
     net_profit = gross_pay - total_cost
     rpm = gross_pay / total_miles if total_miles > 0 else 0
 
-    # Strict HOS-Based ETA & Timeline Simulation Engine
+    # Strict 14-Hour Shift HOS Simulation Engine
     total_trip_hours_needed = total_miles / average_speed if average_speed > 0 else 0
     current_dt = datetime.combine(pickup_date, pickup_time)
 
@@ -157,7 +157,6 @@ with right_column:
     shift_clock = shift_hours_left
     cycle_clock = cycle_hours_left
 
-    active_drive_left_in_shift = min(drive_clock, shift_clock, cycle_clock)
     timeline_events = []
 
     timeline_events.append({
@@ -169,34 +168,39 @@ with right_column:
     })
 
     while remaining_drive_to_complete > 0:
-        if active_drive_left_in_shift >= remaining_drive_to_complete:
+        # The available operational window before a mandatory 10h rest is governed strictly by the 14-hour shift (or cycle/drive limits)
+        allowed_window = min(shift_clock, cycle_clock)
+        
+        if allowed_window >= remaining_drive_to_complete:
+            # Finishes trip within the current 14-hour shift window
             current_dt += timedelta(hours=remaining_drive_to_complete)
-            drive_clock -= remaining_drive_to_complete
+            drive_clock = max(0.0, drive_clock - remaining_drive_to_complete)
             shift_clock -= remaining_drive_to_complete
             cycle_clock -= remaining_drive_to_complete
             
             timeline_events.append({
                 "Milestone": "Final Drop-Off Reached",
                 "Timestamp": current_dt.strftime('%b %d, %H:%M'),
-                "Drive Clock": f"{max(0.0, drive_clock):.2f}h",
+                "Drive Clock": f"{drive_clock:.2f}h",
                 "Shift Clock": f"{max(0.0, shift_clock):.2f}h",
                 "Cycle Clock": f"{max(0.0, cycle_clock):.2f}h"
             })
             remaining_drive_to_complete = 0
         else:
-            current_dt += timedelta(hours=active_drive_left_in_shift)
-            remaining_drive_to_complete -= active_drive_left_in_shift
+            # Drive as much as the 14-hour shift allows before running out
+            current_dt += timedelta(hours=allowed_window)
+            remaining_drive_to_complete -= allowed_window
             
-            drive_clock -= active_drive_left_in_shift
-            shift_clock -= active_drive_left_in_shift
-            cycle_clock -= active_drive_left_in_shift
+            drive_clock = max(0.0, drive_clock - allowed_window)
+            shift_clock = 0.0
+            cycle_clock = max(0.0, cycle_clock - allowed_window)
             
             timeline_events.append({
-                "Milestone": "HOS Limit Reached (Rest Required)",
+                "Milestone": "14-Hour Shift Limit Reached (Rest Required)",
                 "Timestamp": current_dt.strftime('%b %d, %H:%M'),
-                "Drive Clock": "0.00h",
-                "Shift Clock": "0.00h",
-                "Cycle Clock": f"{max(0.0, cycle_clock):.2f}h"
+                "Drive Clock": f"{drive_clock:.2f}h",
+                "Shift Clock": "0.00h (Exhausted)",
+                "Cycle Clock": f"{cycle_clock:.2f}h"
             })
             
             # 10-hour mandatory reset break
@@ -209,10 +213,8 @@ with right_column:
                 "Timestamp": current_dt.strftime('%b %d, %H:%M'),
                 "Drive Clock": f"{drive_clock:.2f}h (Fresh)",
                 "Shift Clock": f"{shift_clock:.2f}h (Fresh)",
-                "Cycle Clock": f"{max(0.0, cycle_clock):.2f}h"
+                "Cycle Clock": f"{cycle_clock:.2f}h"
             })
-            
-            active_drive_left_in_shift = min(drive_clock, shift_clock, cycle_clock)
 
     estimated_dropoff_dt = current_dt
 

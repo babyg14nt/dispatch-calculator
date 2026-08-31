@@ -168,11 +168,9 @@ with right_column:
     })
 
     while remaining_drive_to_complete > 0:
-        # The available operational window before a mandatory 10h rest is governed strictly by the 14-hour shift (or cycle/drive limits)
         allowed_window = min(shift_clock, cycle_clock)
         
         if allowed_window >= remaining_drive_to_complete:
-            # Finishes trip within the current 14-hour shift window
             current_dt += timedelta(hours=remaining_drive_to_complete)
             drive_clock = max(0.0, drive_clock - remaining_drive_to_complete)
             shift_clock -= remaining_drive_to_complete
@@ -187,7 +185,6 @@ with right_column:
             })
             remaining_drive_to_complete = 0
         else:
-            # Drive as much as the 14-hour shift allows before running out
             current_dt += timedelta(hours=allowed_window)
             remaining_drive_to_complete -= allowed_window
             
@@ -203,7 +200,6 @@ with right_column:
                 "Cycle Clock": f"{cycle_clock:.2f}h"
             })
             
-            # 10-hour mandatory reset break
             current_dt += timedelta(hours=10)
             drive_clock = 11.0
             shift_clock = 14.0
@@ -218,7 +214,6 @@ with right_column:
 
     estimated_dropoff_dt = current_dt
 
-    # Dynamic Colors for Corporate Theme
     if rpm >= 2.20:
         prof_color, prof_rating = "#059669", "HIGH YIELD"
     elif rpm >= 1.75:
@@ -226,7 +221,6 @@ with right_column:
     else:
         prof_color, prof_rating = "#DC2626", "SUB-OPTIMAL"
 
-    # Top Metrics HUD (Right Side)
     m1, m2 = st.columns(2)
     with m1:
         st.markdown(f"""
@@ -258,7 +252,6 @@ with right_column:
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("#### Operator Clock Evolution & Route Timeline")
 
-    # Timeline Table
     df_timeline = pd.DataFrame(timeline_events)
     st.dataframe(df_timeline, use_container_width=True, hide_index=True)
 

@@ -21,13 +21,13 @@ st.markdown("""
         color: #1E293B;
         font-family: 'Inter', sans-serif;
     }
-
+    
     h1, h2, h3, h4 {
         font-family: 'Inter', sans-serif !important;
         color: #0F172A;
         font-weight: 700;
     }
-
+    
     .main-title {
         color: #0B192C;
         font-size: 2rem;
@@ -35,7 +35,7 @@ st.markdown("""
         border-bottom: 2px solid #E2E8F0;
         padding-bottom: 10px;
     }
-
+    
     .corporate-card {
         background: #FFFFFF;
         border: 1px solid #E2E8F0;
@@ -45,7 +45,7 @@ st.markdown("""
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         margin-bottom: 15px;
     }
-
+    
     .metric-card {
         background: #FFFFFF;
         border: 1px solid #E2E8F0;
@@ -55,7 +55,7 @@ st.markdown("""
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         margin-bottom: 10px;
     }
-
+    
     .stNumberInput input, .stTimeInput input, .stTextInput input, .stDateInput input {
         background-color: #FFFFFF !important;
         color: #0F172A !important;
@@ -65,13 +65,13 @@ st.markdown("""
         padding: 8px !important;
         font-weight: 500;
     }
-
+    
     label {
         color: #334155 !important;
         font-weight: 600 !important;
         font-size: 13px !important;
     }
-
+    
     .stButton button {
         background-color: #0B192C;
         color: #FFFFFF;
@@ -101,11 +101,11 @@ left_column, right_column = st.columns([1, 1.3], gap="large")
 
 with left_column:
     st.markdown("### 📥 Dispatch & Route Inputs")
-
+    
     st.markdown("<div class='corporate-card'>", unsafe_allow_html=True)
     st.markdown("#### Active Operator Baseline")
     driver_name = st.text_input("Operator Designation", "Unit-01 Operator")
-
+    
     ic1, ic2, ic3 = st.columns(3)
     with ic1:
         driving_hours_left = st.number_input("Drive Left (11h)", min_value=0.0, max_value=11.0, value=8.5, step=0.25)
@@ -118,7 +118,7 @@ with left_column:
     st.markdown("<div class='corporate-card'>", unsafe_allow_html=True)
     st.markdown("#### Spot Market Financials")
     gross_pay = st.number_input("Gross Load Pay ($)", min_value=0.0, value=2400.0, step=50.0)
-
+    
     rc1, rc2 = st.columns(2)
     with rc1:
         loaded_miles = st.number_input("Loaded Miles", min_value=0.0, value=1200.0, step=10.0)
@@ -130,6 +130,10 @@ with left_column:
 
     st.markdown("<div class='corporate-card'>", unsafe_allow_html=True)
     st.markdown("#### Route Dynamics & Timing")
+    
+    origin_location = st.text_input("Origin / Pickup Location", "Dallas, TX")
+    destination_location = st.text_input("Destination / Drop-Off Location", "Atlanta, GA")
+
     tc1, tc2 = st.columns(2)
     with tc1:
         pickup_date = st.date_input("Pickup Date", datetime.now())
@@ -162,7 +166,7 @@ with right_column:
     timeline_events = []
 
     timeline_events.append({
-        "Milestone": "Trip Pickup Initiated",
+        "Milestone": f"Pickup Initiated ({origin_location})",
         "Timestamp": current_dt.strftime('%b %d, %H:%M'),
         "Drive Clock": f"{drive_clock:.2f}h",
         "Shift Clock": f"{shift_clock:.2f}h",
@@ -171,15 +175,15 @@ with right_column:
 
     while remaining_drive_to_complete > 0:
         allowed_window = min(shift_clock, cycle_clock)
-
+        
         if allowed_window >= remaining_drive_to_complete:
             current_dt += timedelta(hours=remaining_drive_to_complete)
             drive_clock = max(0.0, drive_clock - remaining_drive_to_complete)
             shift_clock -= remaining_drive_to_complete
             cycle_clock -= remaining_drive_to_complete
-
+            
             timeline_events.append({
-                "Milestone": "Final Drop-Off Reached",
+                "Milestone": f"Drop-Off Reached ({destination_location})",
                 "Timestamp": current_dt.strftime('%b %d, %H:%M'),
                 "Drive Clock": f"{drive_clock:.2f}h",
                 "Shift Clock": f"{max(0.0, shift_clock):.2f}h",
@@ -189,11 +193,11 @@ with right_column:
         else:
             current_dt += timedelta(hours=allowed_window)
             remaining_drive_to_complete -= allowed_window
-
+            
             drive_clock = max(0.0, drive_clock - allowed_window)
             shift_clock = 0.0
             cycle_clock = max(0.0, cycle_clock - allowed_window)
-
+            
             timeline_events.append({
                 "Milestone": "14-Hour Shift Limit Reached (Rest Required)",
                 "Timestamp": current_dt.strftime('%b %d, %H:%M'),
@@ -201,11 +205,11 @@ with right_column:
                 "Shift Clock": "0.00h (Exhausted)",
                 "Cycle Clock": f"{cycle_clock:.2f}h"
             })
-
+            
             current_dt += timedelta(hours=10)
             drive_clock = 11.0
             shift_clock = 14.0
-
+            
             timeline_events.append({
                 "Milestone": "10-Hour Rest Break Completed",
                 "Timestamp": current_dt.strftime('%b %d, %H:%M'),
@@ -253,11 +257,11 @@ with right_column:
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("#### Interactive Route Overview")
-
+    
     # Embedded Folium Map showing Origin and Destination context
     route_map = folium.Map(location=[32.7767, -96.7970], zoom_start=5)
-    folium.Marker([32.7767, -96.7970], popup="Origin / Pickup", icon=folium.Icon(color="blue", icon="play")).add_to(route_map)
-    folium.Marker([36.1627, -86.7816], popup="Destination / Drop-Off", icon=folium.Icon(color="red", icon="stop")).add_to(route_map)
+    folium.Marker([32.7767, -96.7970], popup=f"Pickup: {origin_location}", icon=folium.Icon(color="blue", icon="play")).add_to(route_map)
+    folium.Marker([36.1627, -86.7816], popup=f"Drop-Off: {destination_location}", icon=folium.Icon(color="red", icon="stop")).add_to(route_map)
     st_folium(route_map, width="100%", height=250)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -268,4 +272,4 @@ with right_column:
 
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("COMMIT LOAD PROFILE TO DISPATCH LOG"):
-        st.success("Load profile successfully processed and logged to corporate records.")
+        st.success(f"Load from {origin_location} to {destination_location} successfully processed and logged to corporate records.")

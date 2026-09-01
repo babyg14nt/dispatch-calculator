@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, time
-import folium
-from streamlit_folium import st_folium
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -130,10 +128,6 @@ with left_column:
 
     st.markdown("<div class='corporate-card'>", unsafe_allow_html=True)
     st.markdown("#### Route Dynamics & Timing")
-    
-    origin_location = st.text_input("Origin / Pickup Location", "Dallas, TX")
-    destination_location = st.text_input("Destination / Drop-Off Location", "Atlanta, GA")
-
     tc1, tc2 = st.columns(2)
     with tc1:
         pickup_date = st.date_input("Pickup Date", datetime.now())
@@ -166,7 +160,7 @@ with right_column:
     timeline_events = []
 
     timeline_events.append({
-        "Milestone": f"Pickup Initiated ({origin_location})",
+        "Milestone": "Trip Pickup Initiated",
         "Timestamp": current_dt.strftime('%b %d, %H:%M'),
         "Drive Clock": f"{drive_clock:.2f}h",
         "Shift Clock": f"{shift_clock:.2f}h",
@@ -174,16 +168,18 @@ with right_column:
     })
 
     while remaining_drive_to_complete > 0:
+        # The available operational window before a mandatory 10h rest is governed strictly by the 14-hour shift (or cycle/drive limits)
         allowed_window = min(shift_clock, cycle_clock)
         
         if allowed_window >= remaining_drive_to_complete:
+            # Finishes trip within the current 14-hour shift window
             current_dt += timedelta(hours=remaining_drive_to_complete)
             drive_clock = max(0.0, drive_clock - remaining_drive_to_complete)
             shift_clock -= remaining_drive_to_complete
             cycle_clock -= remaining_drive_to_complete
             
             timeline_events.append({
-                "Milestone": f"Drop-Off Reached ({destination_location})",
+                "Milestone": "Final Drop-Off Reached",
                 "Timestamp": current_dt.strftime('%b %d, %H:%M'),
                 "Drive Clock": f"{drive_clock:.2f}h",
                 "Shift Clock": f"{max(0.0, shift_clock):.2f}h",
@@ -191,6 +187,7 @@ with right_column:
             })
             remaining_drive_to_complete = 0
         else:
+            # Drive as much as the 14-hour shift allows before running out
             current_dt += timedelta(hours=allowed_window)
             remaining_drive_to_complete -= allowed_window
             
@@ -206,6 +203,7 @@ with right_column:
                 "Cycle Clock": f"{cycle_clock:.2f}h"
             })
             
+            # 10-hour mandatory reset break
             current_dt += timedelta(hours=10)
             drive_clock = 11.0
             shift_clock = 14.0
@@ -220,6 +218,7 @@ with right_column:
 
     estimated_dropoff_dt = current_dt
 
+    # Dynamic Colors for Corporate Theme
     if rpm >= 2.20:
         prof_color, prof_rating = "#059669", "HIGH YIELD"
     elif rpm >= 1.75:
@@ -227,6 +226,7 @@ with right_column:
     else:
         prof_color, prof_rating = "#DC2626", "SUB-OPTIMAL"
 
+    # Top Metrics HUD (Right Side)
     m1, m2 = st.columns(2)
     with m1:
         st.markdown(f"""
@@ -256,20 +256,12 @@ with right_column:
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("#### Interactive Route Overview")
-    
-    # Embedded Folium Map showing Origin and Destination context
-    route_map = folium.Map(location=[32.7767, -96.7970], zoom_start=5)
-    folium.Marker([32.7767, -96.7970], popup=f"Pickup: {origin_location}", icon=folium.Icon(color="blue", icon="play")).add_to(route_map)
-    folium.Marker([36.1627, -86.7816], popup=f"Drop-Off: {destination_location}", icon=folium.Icon(color="red", icon="stop")).add_to(route_map)
-    st_folium(route_map, width="100%", height=250)
-
-    st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("#### Operator Clock Evolution & Route Timeline")
 
+    # Timeline Table
     df_timeline = pd.DataFrame(timeline_events)
     st.dataframe(df_timeline, use_container_width=True, hide_index=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("COMMIT LOAD PROFILE TO DISPATCH LOG"):
-        st.success(f"Load from {origin_location} to {destination_location} successfully processed and logged to corporate records.")
+        st.success("Load profile successfully processed and logged to corporate records.")
